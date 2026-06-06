@@ -1,17 +1,31 @@
+# 工作流名称，可在GitHub Actions页面中看到
 name: Keepalive Workflow
 
+# 触发条件：使用 cron 定时触发
+# 此处设置为每天 UTC 时间 00:00 运行，可自行调整
 on:
   schedule:
-    # 每天 UTC 时间 00:00 运行
     - cron: "0 0 * * *"
 
+# 所需权限：此工作流需要调用 GitHub API 和写入代码的权限
 permissions:
-  actions: write
+  actions: write      # 用于调用 GitHub API
+  contents: write     # 用于创建虚拟提交（必需）
 
 jobs:
-  keepalive:
+  keepalive-job:
     name: Keepalive Workflow
+    # 运行环境：使用最新的 Ubuntu 虚拟机
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: gautamkrishnar/keepalive-workflow@v2
+      # 1. 检出仓库代码，这是保活操作的基础
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. 执行保活操作
+      # 启用虚拟提交模式，会在距上次提交45天后创建一个空提交
+      - name: Keepalive Action
+        uses: gautamkrishnar/keepalive-workflow@v2
+        with:
+          use_api: false   # 禁用默认的API模式，启用更可靠的“虚拟提交”模式
+          time_elapsed: "45"  # 设置为45天，在接近60天时限前自动激活
